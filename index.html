@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Beacon — AI Agent Monitoring, Fully Observable</title>
+<meta name="description" content="3 lines of code. Real-time monitoring, cost tracking, and anomaly detection for every AI agent you run.">
+<meta property="og:title" content="MCP Beacon — Your AI Agents. Fully Observable.">
+<meta property="og:description" content="3 lines of code. Real-time monitoring, cost tracking, and anomaly detection.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="design/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── Design Tokens (from Designer D3 Brand Guide) ─── */
+:root {
+  --orange: #F97316;
+  --orange-dark: #EA580C;
+  --orange-light: #FDBA74;
+  --orange-ghost: #FFF7ED;
+  --navy: #1A1A2E;
+  --navy-mid: #16213E;
+  --gray-bg: #F5F5F5;
+  --white: #FFFFFF;
+  --text: #1A1A2E;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --border: #E5E7EB;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07);
+  --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.1);
+  --shadow-glow: 0 0 30px rgba(249,115,22,0.3);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ─── Dark Mode ─── */
+[data-theme="dark"] {
+  --gray-bg: #0A0E1A;
+  --white: #1A1A2E;
+  --text: #F5F5F5;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  --border: #2D3748;
+  --navy: #F5F5F5;
+}
+
+/* ─── Reset ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-body);color:var(--text);background:var(--gray-bg);line-height:1.6;overflow-x:hidden}
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+a{color:inherit}
+
+/* ─── Navigation ─── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transition:background 0.3s}
+[data-theme="dark"] nav{background:rgba(10,14,26,0.9)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:68px;max-width:1200px;margin:0 auto;padding:0 24px}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo svg{width:34px;height:34px}
+.nav-logo span{font-family:var(--font-heading);font-weight:700;font-size:20px;color:var(--text);letter-spacing:-0.01em}
+.nav-links{display:flex;align-items:center;gap:28px;list-style:none}
+.nav-links a{text-decoration:none;color:var(--text-secondary);font-size:14px;font-weight:500;transition:color 0.15s}
+.nav-links a:hover{color:var(--orange)}
+.nav-actions{display:flex;align-items:center;gap:12px}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:var(--radius-md);width:38px;height:38px;cursor:pointer;font-size:18px;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.theme-toggle:hover{border-color:var(--orange);color:var(--orange)}
+.mobile-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:8px;color:var(--text)}
+
+/* ─── Buttons ─── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:var(--radius-md);font-family:var(--font-body);font-size:15px;font-weight:600;text-decoration:none;cursor:pointer;transition:all 0.2s;border:none;white-space:nowrap;letter-spacing:-0.01em}
+.btn-primary{background:var(--orange);color:#FFF}
+.btn-primary:hover{background:var(--orange-dark);transform:translateY(-1px);box-shadow:var(--shadow-glow)}
+.btn-secondary{background:transparent;color:var(--orange);border:1.5px solid var(--orange)}
+.btn-secondary:hover{background:var(--orange-ghost)}
+.btn-code{background:var(--navy);color:#FFF;font-family:var(--font-mono);font-size:13px;padding:14px 24px;gap:12px}
+.btn-code:hover{background:var(--navy-mid);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.btn-code .copy-hint{font-family:var(--font-body);font-size:11px;opacity:0.6}
+[data-theme="dark"] .btn-code{background:#16213E}
+
+/* ─── Section Framework ─── */
+section{padding:100px 0}
+.section-label{display:inline-block;font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--orange);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;padding:5px 14px;background:var(--orange-ghost);border-radius:var(--radius-full)}
+.section-header{text-align:center;margin-bottom:56px}
+.section-title{font-family:var(--font-heading);font-size:clamp(2rem,4vw,2.75rem);font-weight:700;line-height:1.15;letter-spacing:-0.02em;margin-bottom:16px}
+.section-subtitle{font-size:18px;color:var(--text-secondary);max-width:560px;margin:0 auto;line-height:1.65}
+
+/* ═══════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════ */
+.hero{padding:160px 0 80px;text-align:center;position:relative;overflow:hidden}
+.hero-bg{position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:800px;opacity:0.04;pointer-events:none}
+.hero-bg polygon{fill:var(--orange)}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--orange);background:var(--orange-ghost);padding:6px 16px;border-radius:var(--radius-full);margin-bottom:24px}
+.hero-tag-dot{width:7px;height:7px;background:var(--success);border-radius:50%;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+.hero h1{font-family:var(--font-heading);font-size:clamp(2.5rem,6vw,3.75rem);font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:20px}
+.hero h1 span{color:var(--orange)}
+.hero p{font-size:19px;color:var(--text-secondary);max-width:620px;margin:0 auto 36px;line-height:1.65}
+.hero-card{margin-top:60px;display:flex;justify-content:center}
+.hero-terminal{background:var(--navy);border-radius:var(--radius-xl);padding:0;max-width:540px;width:100%;text-align:left;box-shadow:var(--shadow-lg);overflow:hidden;border:1px solid rgba(255,255,255,0.08)}
+[data-theme="dark"] .hero-terminal{background:#0F1629;border-color:#2D3748}
+.term-bar{display:flex;align-items:center;gap:6px;height:40px;padding:0 16px;background:rgba(0,0,0,0.2);border-bottom:1px solid rgba(255,255,255,0.06)}
+.term-bar span{width:11px;height:11px;border-radius:50%}
+.term-bar span:nth-child(1){background:#EF4444}
+.term-bar span:nth-child(2){background:#F59E0B}
+.term-bar span:nth-child(3){background:#10B981}
+.term-title{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-left:8px}
+.term-body{padding:20px;font-family:var(--font-mono);font-size:13px;line-height:1.8;color:#A5B4FC}
+.term-body .kw{color:#F97316}
+.term-body .str{color:#6EE7B7}
+.term-body .cmt{color:#6B7280}
+.term-body .cursor{display:inline-block;width:8px;height:15px;background:var(--orange);animation:blink 1s step-end infinite;vertical-align:text-bottom;margin-left:1px}
+@keyframes blink{50%{opacity:0}}
+.hero-trust{margin-top:16px;font-size:13px;color:var(--text-muted)}
+.hero-trust a{color:var(--orange);text-decoration:none;font-weight:500}
+
+/* ═══════════════════════════════════════
+   FEATURES
+   ═══════════════════════════════════════ */
+.features-bg{background:var(--white)}
+[data-theme="dark"] .features-bg{background:#0F1629}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;margin-top:48px}
+.feature-card{background:var(--gray-bg);border:1px solid var(--border);border-radius:var(--radius-xl);padding:36px;transition:all 0.3s;position:relative;overflow:hidden}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--orange);opacity:0;transition:opacity 0.3s}
+.feature-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--orange-light)}
+.feature-card:hover::before{opacity:1}
+.feature-card:nth-child(4)::before,.feature-card:nth-child(5)::before,.feature-card:nth-child(6)::before{background:var(--orange-light)}
+.feature-icon{font-size:32px;margin-bottom:20px;display:block}
+.feature-card h3{font-family:var(--font-heading);font-size:19px;font-weight:600;margin-bottom:10px;letter-spacing:-0.01em}
+.feature-card p{color:var(--text-secondary);font-size:15px;line-height:1.65;margin-bottom:16px}
+.feature-bullets{list-style:none;margin-top:12px}
+.feature-bullets li{font-size:13.5px;color:var(--text-secondary);padding:5px 0;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.feature-bullets li::before{content:'›';color:var(--orange);font-weight:700;font-size:16px;line-height:1.3}
+.feature-card code{display:block;background:var(--navy);color:#A5B4FC;font-family:var(--font-mono);font-size:12px;padding:14px 16px;border-radius:var(--radius-md);margin-top:14px;line-height:1.7;overflow-x:auto}
+[data-theme="dark"] .feature-card code{background:#0A0E1A}
+
+/* ═══════════════════════════════════════
+   HOW IT WORKS
+   ═══════════════════════════════════════ */
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:48px}
+.how-step{text-align:center;position:relative;padding:0 16px}
+.how-step:not(:last-child)::after{content:'';position:absolute;top:44px;right:-36px;width:72px;height:2px;background:linear-gradient(90deg,var(--orange),var(--orange-light));opacity:0.4}
+.how-number{width:88px;height:88px;border-radius:50%;background:var(--orange-ghost);border:2px solid var(--orange);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-family:var(--font-heading);font-size:32px;font-weight:700;color:var(--orange);transition:all 0.3s}
+.how-step:hover .how-number{background:var(--orange);color:#FFF;box-shadow:var(--shadow-glow)}
+.how-step h3{font-family:var(--font-heading);font-size:21px;font-weight:600;margin-bottom:10px}
+.how-step p{color:var(--text-secondary);font-size:15px;line-height:1.6}
+.how-code{text-align:center;margin-top:56px;padding:40px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-xl);max-width:640px;margin-left:auto;margin-right:auto;box-shadow:var(--shadow-sm)}
+[data-theme="dark"] .how-code{background:#16213E;border-color:#2D3748}
+.how-code-label{font-size:13px;color:var(--text-muted);font-weight:500;margin-bottom:12px}
+.how-code pre{background:var(--navy);color:#A5B4FC;font-family:var(--font-mono);font-size:13px;padding:20px;border-radius:var(--radius-md);text-align:left;line-height:1.75;overflow-x:auto;margin:0}
+[data-theme="dark"] .how-code pre{background:#0A0E1A}
+
+/* ═══════════════════════════════════════
+   PRICING
+   ═══════════════════════════════════════ */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px;align-items:start}
+.pricing-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-xl);padding:36px 32px;transition:all 0.3s;position:relative}
+.pricing-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.pricing-card.highlight{border-color:var(--orange);border-width:2px;box-shadow:0 0 40px rgba(249,115,22,0.12);z-index:1}
+.pricing-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--orange);color:#FFF;padding:6px 20px;border-radius:var(--radius-full);font-size:13px;font-weight:600;white-space:nowrap;letter-spacing:-0.01em}
+.pricing-name{font-family:var(--font-heading);font-size:20px;font-weight:700;margin-bottom:12px}
+.pricing-price{font-family:var(--font-heading);font-size:44px;font-weight:800;margin-bottom:2px;line-height:1}
+.pricing-price span{font-size:16px;font-weight:400;color:var(--text-muted)}
+.pricing-desc{color:var(--text-secondary);font-size:14px;margin-bottom:28px;line-height:1.5}
+.pricing-features{list-style:none;margin-bottom:28px}
+.pricing-features li{padding:9px 0;font-size:14px;color:var(--text-secondary);display:flex;align-items:center;gap:10px;line-height:1.4}
+.pricing-features li::before{content:'✓';color:var(--success);font-weight:700;font-size:15px;flex-shrink:0}
+.pricing-features li.muted{color:var(--text-muted)}
+.pricing-features li.muted::before{color:var(--text-muted)}
+.pricing-card .btn{width:100%;justify-content:center;text-align:center}
+
+/* ═══════════════════════════════════════
+   FAQ
+   ═══════════════════════════════════════ */
+.faq-bg{background:var(--white)}
+[data-theme="dark"] .faq-bg{background:#0F1629}
+.faq-list{margin-top:48px;max-width:760px;margin-left:auto;margin-right:auto}
+.faq-item{border-bottom:1px solid var(--border);padding:26px 0;cursor:pointer;transition:all 0.2s}
+.faq-item:hover .faq-q{color:var(--orange)}
+.faq-q{font-family:var(--font-heading);font-size:18px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s;user-select:none}
+.faq-q::after{content:'+';font-size:22px;color:var(--orange);font-weight:300;transition:transform 0.25s;flex-shrink:0}
+.faq-item.open .faq-q::after{content:'−';transform:rotate(180deg)}
+.faq-a{color:var(--text-secondary);font-size:15px;line-height:1.7;padding-top:14px;display:none}
+.faq-item.open .faq-a{display:block}
+
+/* ═══════════════════════════════════════
+   CTA
+   ═══════════════════════════════════════ */
+.cta{text-align:center}
+.cta-inner{background:linear-gradient(135deg,var(--navy),#16213E);border-radius:var(--radius-xl);padding:72px 48px;color:#FFF;position:relative;overflow:hidden}
+.cta-inner::before{content:'';position:absolute;top:-120px;right:-120px;width:420px;height:420px;border-radius:50%;background:var(--orange);opacity:0.06;pointer-events:none}
+.cta-inner::after{content:'';position:absolute;bottom:-80px;left:-80px;width:280px;height:280px;border-radius:50%;background:var(--orange);opacity:0.04;pointer-events:none}
+.cta h2{font-family:var(--font-heading);font-size:clamp(1.8rem,3vw,2.5rem);font-weight:700;margin-bottom:16px;position:relative}
+.cta p{font-size:18px;opacity:0.85;max-width:520px;margin:0 auto 36px;position:relative;line-height:1.6}
+.cta .btn-primary{background:#FFF;color:var(--navy);font-size:16px;padding:15px 36px}
+.cta .btn-primary:hover{background:#F5F5F5;box-shadow:0 0 40px rgba(255,255,255,0.25);transform:translateY(-2px)}
+.cta-small{display:block;margin-top:16px;font-size:13px;opacity:0.6;position:relative}
+
+/* ═══════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════ */
+footer{background:var(--navy);color:#E5E7EB;padding:72px 0 32px}
+[data-theme="dark"] footer{background:#060A14}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:52px}
+.footer-brand p{color:#9CA3AF;font-size:14px;line-height:1.7;margin-top:14px;max-width:280px}
+.footer-col h4{font-family:var(--font-heading);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:18px;opacity:0.5}
+.footer-col ul{list-style:none}
+.footer-col li{margin-bottom:11px}
+.footer-col a{color:#9CA3AF;text-decoration:none;font-size:14px;transition:color 0.15s}
+.footer-col a:hover{color:var(--orange)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.08);padding-top:28px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#6B7280;flex-wrap:wrap;gap:16px}
+.footer-social{display:flex;gap:16px}
+.footer-social a{color:#9CA3AF;text-decoration:none;font-size:14px;transition:color 0.15s}
+.footer-social a:hover{color:var(--orange)}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════ */
+@media(max-width:1024px){
+  .pricing-grid,.how-steps{grid-template-columns:1fr;max-width:440px;margin-left:auto;margin-right:auto}
+  .how-step:not(:last-child)::after{display:none}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:36px}
+  .pricing-card.highlight{order:-1}
+}
+@media(max-width:768px){
+  .nav-links{display:none}
+  .nav-links.open{display:flex;flex-direction:column;position:absolute;top:68px;left:0;right:0;background:var(--white);border-bottom:1px solid var(--border);padding:16px 24px;gap:8px;box-shadow:var(--shadow-lg)}
+  [data-theme="dark"] .nav-links.open{background:#0F1629}
+  .mobile-menu-btn{display:block}
+  section{padding:72px 0}
+  .hero{padding:130px 0 56px}
+  .features-grid{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr;gap:32px}
+  .hero-terminal{max-width:100%}
+  .term-body{font-size:11px;padding:16px}
+  .cta-inner{padding:48px 24px}
+  .how-code{padding:24px}
+  .how-code pre{font-size:11px;padding:14px}
+  .pricing-card{padding:28px 24px}
+}
+@media(max-width:480px){
+  .hero h1{font-size:2rem}
+  .hero p{font-size:16px}
+  .btn-code{font-size:11px;padding:12px 16px}
+  .hero-actions .btn{width:100%;justify-content:center}
+}
+
+/* ═══════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.animate{animation:fadeUp 0.65s ease-out backwards}
+.animate-d1{animation-delay:0.05s}
+.animate-d2{animation-delay:0.12s}
+.animate-d3{animation-delay:0.2s}
+.animate-d4{animation-delay:0.3s}
+
+/* ─── Scroll Reveal ─── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity 0.7s ease,transform 0.7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ─── Utility ─── */
+.text-gradient{background:linear-gradient(135deg,var(--orange),#FB923C);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+</style>
+</head>
+<body>
+
+<!-- ═══════ NAVIGATION ═══════ -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <svg viewBox="0 0 32 32" aria-label="MCP Beacon">
+        <polygon points="16,2 28,9 28,23 16,30 4,23 4,9" fill="currentColor" fill-opacity="0.15" stroke="#F97316" stroke-width="1.8"/>
+        <circle cx="16" cy="16" r="4.5" fill="#F97316"/>
+      </svg>
+      <span>Beacon</span>
+    </a>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#features" onclick="closeMobileMenu()">Features</a></li>
+      <li><a href="#how" onclick="closeMobileMenu()">How It Works</a></li>
+      <li><a href="#pricing" onclick="closeMobileMenu()">Pricing</a></li>
+      <li><a href="#faq" onclick="closeMobileMenu()">FAQ</a></li>
+      <li><a href="https://docs.mcpbeacon.dev" target="_blank" rel="noopener">Docs ↗</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">☀</button>
+      <a href="#pricing" class="btn btn-primary" style="padding:9px 20px;font-size:14px">Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero" id="hero">
+  <svg class="hero-bg" viewBox="0 0 800 800" aria-hidden="true"><polygon points="400,50 650,200 650,500 400,650 150,500 150,200"/></svg>
+  <div class="container">
+    <div class="hero-tag animate animate-d1">
+      <span class="hero-tag-dot"></span> Now in Public Beta
+    </div>
+    <h1 class="animate animate-d1">Your AI Agents.<br><span class="text-gradient">Fully Observable.</span></h1>
+    <p class="animate animate-d2">3 lines of code. Real-time monitoring, cost tracking, and anomaly detection for every AI agent you run.</p>
+    <div class="animate animate-d3" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="#pricing" class="btn btn-primary" style="font-size:16px;padding:15px 32px">Start Monitoring Free →</a>
+      <button class="btn btn-code" onclick="copyNpm()">
+        <span id="npmText">npm install mcp-beacon</span>
+        <span class="copy-hint" id="copyHint">📋 Copy</span>
+      </button>
+    </div>
+    <p class="animate animate-d2 hero-trust">No credit card required. Free for 1 agent. <a href="#pricing">See plans →</a></p>
+    <div class="hero-card animate animate-d4">
+      <div class="hero-terminal">
+        <div class="term-bar">
+          <span></span><span></span><span></span>
+          <span class="term-title">terminal — agent.ts</span>
+        </div>
+        <div class="term-body">
+          <span class="cmt">// 3 lines — that's all it takes</span><br>
+          <span class="kw">import</span> { Beacon } <span class="kw">from</span> <span class="str">'mcp-beacon'</span>;<br>
+          <span class="kw">const</span> beacon = <span class="kw">new</span> Beacon({ apiKey: <span class="str">'mb_live_…'</span> });<br>
+          beacon.<span class="kw">wrap</span>(openai); <span class="cmt">// done.</span><br>
+          <br>
+          <span class="cmt">// Every API call is now monitored:</span><br>
+          <span class="cmt">// ✓ Tokens counted &nbsp; ✓ Cost tracked</span><br>
+          <span class="cmt">// ✓ Latency measured &nbsp; ✓ Errors flagged</span><br>
+          <span class="cursor"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FEATURES ═══════ -->
+<section id="features" class="features-bg">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Features</span>
+      <h2 class="section-title">See Everything.<br>Miss Nothing.</h2>
+      <p class="section-subtitle">Every API call, every token spent, every millisecond of latency — streamed to your dashboard in real time.</p>
+    </div>
+    <div class="features-grid">
+
+      <!-- Feature 1: Real-Time Dashboard -->
+      <div class="feature-card reveal">
+        <span class="feature-icon">📊</span>
+        <h3>Real-Time Dashboard</h3>
+        <p>Watch every LLM API call and HTTP request your agents make — live. Spot issues before they become incidents.</p>
+        <ul class="feature-bullets">
+          <li>Live agent status (online / offline / idle)</li>
+          <li>7-day trend charts for calls, cost, and errors</li>
+          <li>Drill down to individual conversation traces</li>
+        </ul>
+      </div>
+
+      <!-- Feature 2: Cost Tracking -->
+      <div class="feature-card reveal">
+        <span class="feature-icon">💰</span>
+        <h3>Know Exactly Where Your Money Goes</h3>
+        <p>"My agent ran overnight and burned $87." — Never again. Track cost per agent, per model, per day. Set budgets. Get alerts before it's too late.</p>
+        <ul class="feature-bullets">
+          <li>Token counting with model-specific pricing</li>
+          <li>Cost breakdown: Agent → Model → Day → Single Call</li>
+          <li>Budget alerts: "Spent 80% of monthly limit"</li>
+          <li>Export everything to CSV</li>
+        </ul>
+      </div>
+
+      <!-- Feature 3: Anomaly Detection -->
+      <div class="feature-card reveal">
+        <span class="feature-icon">🚨</span>
+        <h3>Catch Problems Before Your Users Do</h3>
+        <p>Agent stuck in a loop? Error rate spiking? Cost suddenly 3x normal? We detect it and alert you — so you can fix it before your customers notice.</p>
+        <ul class="feature-bullets">
+          <li>Loop detection (experimental): catches repetitive API calls</li>
+          <li>Error rate spike detection with sliding windows</li>
+          <li>Cost anomaly alerts (daily cost &gt; 200% of baseline)</li>
+          <li>Email notifications (Slack coming soon)</li>
+        </ul>
+      </div>
+
+      <!-- Feature 4: Conversation Trace -->
+      <div class="feature-card reveal">
+        <span class="feature-icon">🔍</span>
+        <h3>Debug Agent Behavior in Seconds</h3>
+        <p>When your agent gives a wrong answer, trace every API call it made — with full request/response context, latency, and cost — in a single timeline view.</p>
+        <ul class="feature-bullets">
+          <li>Full call chain per conversation session</li>
+          <li>Latency breakdown per API call</li>
+          <li>Request/response summaries (not raw payloads)</li>
+          <li>Filter by model, status code, or cost</li>
+        </ul>
+      </div>
+
+      <!-- Feature 5: 3-Line Integration -->
+      <div class="feature-card reveal">
+        <span class="feature-icon">🔌</span>
+        <h3>The Easiest Integration You'll Ever Do</h3>
+        <p>Your existing code keeps working. We just add observability.</p>
+        <code><span style="color:#F97316">import</span> { Beacon } <span style="color:#F97316">from</span> <span style="color:#6EE7B7">'mcp-beacon'</span>;<br><span style="color:#F97316">const</span> beacon = <span style="color:#F97316">new</span> Beacon({ apiKey: <span style="color:#6EE7B7">'...'</span> });<br>beacon.<span style="color:#A5B4FC">wrap</span>(openai); <span style="color:#6B7280">// That's it.</span></code>
+        <ul class="feature-bullets" style="margin-top:14px">
+          <li>Zero-config for OpenAI, Anthropic, DeepSeek</li>
+          <li>Non-blocking async batching — no performance impact</li>
+          <li>Works with fetch and axios out of the box</li>
+        </ul>
+      </div>
+
+      <!-- Feature 6: Privacy First -->
+      <div class="feature-card reveal">
+        <span class="feature-icon">🔐</span>
+        <h3>Your Data Stays Yours</h3>
+        <p>We never store raw request/response payloads. Only metadata: model, token count, latency, status code, cost. Your prompts and completions are YOUR business.</p>
+        <ul class="feature-bullets">
+          <li>No raw payload storage</li>
+          <li>API keys encrypted at rest</li>
+          <li>GDPR-ready data export &amp; deletion</li>
+          <li>Self-host option on roadmap</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ HOW IT WORKS ═══════ -->
+<section id="how">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">How It Works</span>
+      <h2 class="section-title">3 Lines. That's It.</h2>
+      <p class="section-subtitle">Get set up in under 5 minutes. No complex configuration, no code refactoring.</p>
+    </div>
+    <div class="how-steps">
+      <div class="how-step reveal">
+        <div class="how-number">1</div>
+        <h3>Install &amp; Connect</h3>
+        <p><code style="font-family:var(--font-mono);font-size:13px;color:var(--orange);background:var(--orange-ghost);padding:2px 8px;border-radius:4px">npm install mcp-beacon</code> — then wrap your OpenAI, Anthropic, or DeepSeek instance in one line.</p>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-number">2</div>
+        <h3>Observe</h3>
+        <p>Watch calls, tokens, cost, and latency stream into your dashboard in real time — zero code changes to your agent logic.</p>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-number">3</div>
+        <h3>Optimize</h3>
+        <p>Cut costs, catch anomalies, and debug faster with per-call traces. Ship reliable agents with confidence.</p>
+      </div>
+    </div>
+    <div class="how-code reveal">
+      <div class="how-code-label">Full integration example — ready in 3 lines</div>
+      <pre><span style="color:#6B7280">// your existing agent code</span>
+<span style="color:#F97316">import</span> OpenAI <span style="color:#F97316">from</span> <span style="color:#6EE7B7">'openai'</span>;
+<span style="color:#F97316">import</span> { Beacon } <span style="color:#F97316">from</span> <span style="color:#6EE7B7">'mcp-beacon'</span>;
+
+<span style="color:#F97316">const</span> openai = <span style="color:#F97316">new</span> OpenAI();
+<span style="color:#F97316">const</span> beacon = <span style="color:#F97316">new</span> Beacon({ apiKey: <span style="color:#6EE7B7">'mb_live_xxx'</span> });
+beacon.<span style="color:#A5B4FC">wrap</span>(openai); <span style="color:#6B7280">// ← 3 lines of code</span>
+
+<span style="color:#6B7280">// all existing code works as before</span>
+<span style="color:#F97316">const</span> chat = <span style="color:#F97316">await</span> openai.chat.completions.create({
+  model: <span style="color:#6EE7B7">'gpt-4o'</span>,
+  messages: [{ role: <span style="color:#6EE7B7">'user'</span>, content: <span style="color:#6EE7B7">'…'</span> }]
+});
+<span style="color:#6B7280">// ↑ automatically monitored: tokens, latency, cost</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ PRICING ═══════ -->
+<section id="pricing" class="features-bg">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Pricing</span>
+      <h2 class="section-title">Start Free, Scale as You Grow</h2>
+      <p class="section-subtitle">No hidden fees. No surprises. Just the monitoring you need at every stage.</p>
+    </div>
+    <div class="pricing-grid">
+
+      <!-- Free Tier -->
+      <div class="pricing-card reveal">
+        <div class="pricing-name">Free</div>
+        <div class="pricing-price">$0<span>/mo</span></div>
+        <div class="pricing-desc">For solo developers exploring agent monitoring.</div>
+        <ul class="pricing-features">
+          <li>1 Agent</li>
+          <li>7-day data retention</li>
+          <li>Basic dashboard</li>
+          <li>Community support</li>
+          <li class="muted">Email alerts</li>
+          <li class="muted">Cost breakdown</li>
+          <li class="muted">Slack integration</li>
+          <li class="muted">Team access</li>
+        </ul>
+        <a href="#" class="btn btn-secondary">Start Free</a>
+      </div>
+
+      <!-- Pro Tier (highlighted) -->
+      <div class="pricing-card highlight reveal">
+        <div class="pricing-badge">Most Popular</div>
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-price">$19<span>/mo</span></div>
+        <div class="pricing-desc">For indie developers and growing teams.</div>
+        <ul class="pricing-features">
+          <li>5 Agents</li>
+          <li>30-day data retention</li>
+          <li>Full dashboard</li>
+          <li>Email alerts</li>
+          <li>Cost breakdown</li>
+          <li>CSV export</li>
+          <li>Slack integration</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="#" class="btn btn-primary">Go Pro →</a>
+      </div>
+
+      <!-- Enterprise Tier -->
+      <div class="pricing-card reveal">
+        <div class="pricing-name">Enterprise</div>
+        <div class="pricing-price">$100<span>/mo</span></div>
+        <div class="pricing-desc">For teams and organizations at scale.</div>
+        <ul class="pricing-features">
+          <li>20 Agents</li>
+          <li>Unlimited data retention</li>
+          <li>Full dashboard + custom</li>
+          <li>Email + Slack + Webhook</li>
+          <li>Team access (5 members)</li>
+          <li>SSO / SAML</li>
+          <li>Audit logs</li>
+          <li>Dedicated support</li>
+        </ul>
+        <a href="#" class="btn btn-secondary">Contact Us</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FAQ ═══════ -->
+<section id="faq" class="faq-bg">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">FAQ</span>
+      <h2 class="section-title">Got Questions?</h2>
+      <p class="section-subtitle">Everything you need to know about MCP Beacon.</p>
+    </div>
+    <div class="faq-list">
+
+      <div class="faq-item open" onclick="this.classList.toggle('open')">
+        <div class="faq-q">What exactly does MCP Beacon monitor?</div>
+        <div class="faq-a">We monitor the runtime behavior of your AI agents — every LLM API call (model, tokens, latency, cost), every HTTP request your agent makes (URL, status code, response time), and aggregate metrics like error rates and cost trends. We do NOT store raw prompt/response content.</div>
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">How is this different from LangSmith or Helicone?</div>
+        <div class="faq-a">LangSmith is great for LangChain debugging but starts at $39/month and is framework-locked. Helicone is excellent for LLM API logging but doesn't do agent-level monitoring (loop detection, cost alerts, multi-call tracing). MCP Beacon is framework-agnostic, 3-line integration, and built for the full agent lifecycle — not just LLM calls.</div>
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">Does this slow down my agent?</div>
+        <div class="faq-a">No. All data collection is async and batched. SDK overhead is &lt;50ms per operation. Your agent's performance is not affected.</div>
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">What data do you store?</div>
+        <div class="faq-a">Metadata only — model name, token count (estimated), latency, HTTP status codes, cost (calculated). We never store your prompts, completions, or any payload content.</div>
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">Can I self-host?</div>
+        <div class="faq-a">Self-host is on the roadmap for Enterprise plans. For now, we run on Supabase (PostgreSQL) with encrypted storage at rest and in transit.</div>
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">What AI SDKs do you support?</div>
+        <div class="faq-a">OpenAI v4, Anthropic v0, DeepSeek latest. Plus fetch and axios for general HTTP monitoring. Python SDK coming soon.</div>
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">Is there a free tier?</div>
+        <div class="faq-a">Yes! Free tier includes 1 agent, 7 days of data retention, and basic dashboard — no credit card required. When you need more agents or longer data retention, upgrade to Pro ($19/mo).</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ CTA ═══════ -->
+<section class="cta" id="cta">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2>Ready to Illuminate Your Agent Fleet?</h2>
+      <p>Start monitoring in under 5 minutes. No credit card required for the Free plan. See what your agents are really doing.</p>
+      <a href="#pricing" class="btn btn-primary">Start Monitoring Free →</a>
+      <span class="cta-small">npm install mcp-beacon · 5 min setup · Cancel anytime</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><polygon points="12,2 21,7 21,17 12,22 3,17 3,7" fill="none" stroke="#F97316" stroke-width="1.5"/><circle cx="12" cy="12" r="3.5" fill="#F97316"/></svg>
+          <span style="font-family:var(--font-heading);font-weight:700;font-size:18px">Beacon</span>
+        </div>
+        <p>AI Agent monitoring, illuminated. Built for the agent era.</p>
+        <div class="footer-social" style="margin-top:16px">
+          <a href="https://twitter.com/mcpbeacon" target="_blank" rel="noopener">Twitter</a>
+          <a href="https://github.com/mcp-beacon" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://discord.gg/mcpbeacon" target="_blank" rel="noopener">Discord</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#">Changelog</a></li>
+          <li><a href="#">Status</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <ul>
+          <li><a href="https://docs.mcpbeacon.dev" target="_blank" rel="noopener">Documentation</a></li>
+          <li><a href="https://docs.mcpbeacon.dev/sdk" target="_blank" rel="noopener">SDK Reference</a></li>
+          <li><a href="https://docs.mcpbeacon.dev/api" target="_blank" rel="noopener">API Status</a></li>
+          <li><a href="https://github.com/mcp-beacon" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 MCP Beacon. Built for the agent era.</span>
+      <span>Privacy Policy · Terms of Service</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════ SCRIPTS ═══════ -->
+<script>
+// ─── Theme Toggle ───
+(function(){
+  var saved = localStorage.getItem('mcp-beacon-theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme:dark)').matches)) {
+    document.documentElement.dataset.theme = 'dark';
+  }
+  updateThemeIcon();
+})();
+
+function toggleTheme() {
+  var el = document.documentElement;
+  if (el.dataset.theme) { delete el.dataset.theme; localStorage.setItem('mcp-beacon-theme','light'); }
+  else { el.dataset.theme = 'dark'; localStorage.setItem('mcp-beacon-theme','dark'); }
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  document.querySelector('.theme-toggle').textContent =
+    document.documentElement.dataset.theme ? '☾' : '☀';
+}
+
+// ─── Mobile Menu ───
+function toggleMobileMenu() {
+  document.getElementById('navLinks').classList.toggle('open');
+}
+function closeMobileMenu() {
+  document.getElementById('navLinks').classList.remove('open');
+}
+
+// ─── Copy npm install ───
+function copyNpm() {
+  var text = 'npm install mcp-beacon';
+  navigator.clipboard.writeText(text).then(function(){
+    var hint = document.getElementById('copyHint');
+    var orig = hint.textContent;
+    hint.textContent = '✓ Copied!';
+    setTimeout(function(){ hint.textContent = orig; }, 2000);
+  }).catch(function(){});
+}
+
+// ─── Scroll Reveal ───
+(function(){
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(function(el){ observer.observe(el); });
+})();
+
+// ─── Smooth scroll offset for fixed nav ───
+document.querySelectorAll('a[href^="#"]').forEach(function(link){
+  link.addEventListener('click',function(e){
+    var target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
+    }
+  });
+});
+</script>
+
+</body>
+</html>

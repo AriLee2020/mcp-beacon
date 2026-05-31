@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Beacon — Cost Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1629;--surface:#16213E;--surface-hover:#1C2A4A;
+  --orange:#F97316;--orange-dark:#EA580C;
+  --orange-ghost:rgba(249,115,22,0.1);
+  --text:#F5F5F5;--text-secondary:#9CA3AF;--text-muted:#6B7280;
+  --border:#2D3748;--success:#10B981;--warning:#F59E0B;--error:#EF4444;--info:#3B82F6;
+  --radius:12px;--radius-sm:8px;
+  --font-heading:'Outfit',sans-serif;--font-body:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);padding:32px;max-width:1400px;margin:0 auto}
+
+/* Header */
+.panel-header{margin-bottom:32px}
+.panel-header h1{font-family:var(--font-heading);font-size:24px;font-weight:700;margin-bottom:4px}
+.panel-header p{color:var(--text-secondary);font-size:14px}
+
+/* Top summary cards */
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.summary-card .label{font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px}
+.summary-card .value{font-family:var(--font-heading);font-size:26px;font-weight:700}
+.summary-card .sub{font-size:12px;color:var(--text-muted);margin-top:4px}
+.summary-card.warn{border-color:var(--warning)}
+.summary-card.warn .value{color:var(--warning)}
+
+/* Main content grid */
+.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+
+/* Chart section */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.panel h2{font-family:var(--font-heading);font-size:17px;font-weight:600;margin-bottom:20px}
+
+/* Pie/Donut */
+.donut-row{display:flex;align-items:center;gap:32px}
+.donut{position:relative;width:160px;height:160px;flex-shrink:0}
+.donut svg{transform:rotate(-90deg)}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.donut-center .total{font-family:var(--font-heading);font-size:24px;font-weight:700}
+.donut-center .label{font-size:11px;color:var(--text-muted)}
+.legend{display:flex;flex-direction:column;gap:10px;flex:1}
+.legend-item{display:flex;align-items:center;gap:10px}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.legend-info{flex:1}
+.legend-name{font-size:13px;font-weight:500}
+.legend-cost{font-size:12px;color:var(--text-muted);font-family:var(--font-mono)}
+.legend-pct{font-family:var(--font-mono);font-size:13px;font-weight:600}
+
+/* Bar chart section */
+.bar-chart{display:flex;flex-direction:column;gap:12px}
+.bar-row{display:flex;align-items:center;gap:12px}
+.bar-label{width:120px;font-size:13px;font-weight:500;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:28px;background:var(--bg);border-radius:6px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:6px;transition:width 0.4s}
+.bar-fill.orange{background:var(--orange)}
+.bar-fill.blue{background:var(--info)}
+.bar-fill.green{background:var(--success)}
+.bar-fill.yellow{background:var(--warning)}
+.bar-fill.purple{background:#8B5CF6}
+.bar-value{font-family:var(--font-mono);font-size:13px;color:var(--text-secondary);width:80px;flex-shrink:0}
+
+/* Budget section */
+.budget-section{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+.budget-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.budget-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.budget-header h3{font-family:var(--font-heading);font-size:15px;font-weight:600}
+.budget-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.05em}
+.budget-status.ok{background:rgba(16,185,129,0.15);color:var(--success)}
+.budget-status.warn{background:rgba(245,158,11,0.15);color:var(--warning)}
+.budget-status.over{background:rgba(239,68,68,0.15);color:var(--error)}
+.budget-bar{height:10px;background:var(--bg);border-radius:5px;overflow:hidden;margin-bottom:8px}
+.budget-bar-fill{height:100%;border-radius:5px;transition:width 0.4s}
+.budget-bar-fill.orange{background:var(--orange)}
+.budget-bar-fill.warn{background:var(--warning)}
+.budget-bar-fill.error{background:var(--error)}
+.budget-details{display:flex;justify-content:space-between;font-size:12px}
+.budget-spent{font-family:var(--font-mono);font-weight:600}
+.budget-limit{color:var(--text-muted);font-family:var(--font-mono)}
+
+/* Threshold alerts */
+.threshold-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.threshold-card h2{font-family:var(--font-heading);font-size:17px;font-weight:600;margin-bottom:16px}
+.threshold-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:8px}
+.threshold-row .icon{font-size:16px;flex-shrink:0}
+.threshold-row .info{flex:1}
+.threshold-row .info .name{font-size:13px;font-weight:500}
+.threshold-row .info .desc{font-size:11px;color:var(--text-muted)}
+.threshold-toggle{width:40px;height:22px;border-radius:11px;background:var(--orange);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0}
+.threshold-toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#FFF;transition:transform 0.2s}
+.threshold-toggle.off{background:var(--border)}
+.threshold-toggle.off::after{transform:translateX(18px)}
+.threshold-value{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);width:60px;text-align:right;flex-shrink:0}
+.edit-btn{font-family:var(--font-mono);font-size:11px;color:var(--orange);cursor:pointer;background:none;border:none;padding:2px 8px;border-radius:4px}
+.edit-btn:hover{background:var(--orange-ghost)}
+
+/* Daily breakdown table */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;grid-column:1/-1}
+.table-card h2{font-family:var(--font-heading);font-size:17px;font-weight:600;margin-bottom:16px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;padding:12px 16px;border-bottom:1px solid var(--border)}
+td{padding:12px 16px;font-size:13px;border-bottom:1px solid var(--border);font-family:var(--font-mono)}
+td.agent-name{font-family:var(--font-body);font-weight:500}
+tr:hover td{background:var(--surface-hover)}
+.cost-up{color:var(--error)}
+.cost-down{color:var(--success)}
+
+@media(max-width:1024px){
+  .summary-row{grid-template-columns:repeat(2,1fr)}
+  .main-grid,.budget-section{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="panel-header">
+  <h1>Cost Management</h1>
+  <p>Track, analyze, and optimize your agent spending</p>
+</div>
+
+<!-- Summary -->
+<div class="summary-row">
+  <div class="summary-card">
+    <div class="label">Current Month</div>
+    <div class="value">$1,247.32</div>
+    <div class="sub">vs $982.10 last month</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">Today's Spend</div>
+    <div class="value">$47.80</div>
+    <div class="sub">Avg $42.30/day this week</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">Projected Month</div>
+    <div class="value">$1,481.80</div>
+    <div class="sub">5 days remaining</div>
+  </div>
+  <div class="summary-card warn">
+    <div class="label">Budget Status</div>
+    <div class="value">83%</div>
+    <div class="sub">$1,500 monthly limit</div>
+  </div>
+</div>
+
+<!-- Main: Pie + Bar -->
+<div class="main-grid">
+  <div class="panel">
+    <h2>Cost by Agent</h2>
+    <div class="donut-row">
+      <div class="donut">
+        <svg viewBox="0 0 160 160" width="160" height="160">
+          <circle cx="80" cy="80" r="70" fill="none" stroke="var(--bg)" stroke-width="18"/>
+          <!-- Code Reviewer: 35% = 126deg -->
+          <circle cx="80" cy="80" r="70" fill="none" stroke="#F97316" stroke-width="18" stroke-dasharray="440" stroke-dashoffset="286" stroke-linecap="round"/>
+          <!-- Data Analyzer: 25% = 90deg after 126deg -->
+          <circle cx="80" cy="80" r="70" fill="none" stroke="#3B82F6" stroke-width="18" stroke-dasharray="440" stroke-dashoffset="176" stroke-linecap="round"/>
+          <!-- Content Writer: 20% -->
+          <circle cx="80" cy="80" r="70" fill="none" stroke="#10B981" stroke-width="18" stroke-dasharray="440" stroke-dashoffset="88" stroke-linecap="round"/>
+          <!-- Others: 20% -->
+          <circle cx="80" cy="80" r="70" fill="none" stroke="#8B5CF6" stroke-width="18" stroke-dasharray="440" stroke-dashoffset="0" stroke-linecap="round"/>
+        </svg>
+        <div class="donut-center">
+          <div class="total">$1,247</div>
+          <div class="label">this month</div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div><div class="legend-info"><div class="legend-name">Code Reviewer</div><div class="legend-cost">claude-sonnet-4</div></div><div class="legend-pct">$436.56</div></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--info)"></div><div class="legend-info"><div class="legend-name">Data Analyzer</div><div class="legend-cost">gpt-4o</div></div><div class="legend-pct">$311.83</div></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div><div class="legend-info"><div class="legend-name">Content Writer</div><div class="legend-cost">claude-opus</div></div><div class="legend-pct">$249.46</div></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#8B5CF6)"></div><div class="legend-info"><div class="legend-name">Others (9 agents)</div><div class="legend-cost">various</div></div><div class="legend-pct">$249.47</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Cost by Model</h2>
+    <div class="bar-chart">
+      <div class="bar-row">
+        <div class="bar-label">claude-sonnet-4</div>
+        <div class="bar-track"><div class="bar-fill orange" style="width:78%"></div></div>
+        <div class="bar-value">$486.45</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">gpt-4o</div>
+        <div class="bar-track"><div class="bar-fill blue" style="width:62%"></div></div>
+        <div class="bar-value">$386.67</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">claude-opus</div>
+        <div class="bar-track"><div class="bar-fill green" style="width:40%"></div></div>
+        <div class="bar-value">$249.46</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">deepseek-v4</div>
+        <div class="bar-track"><div class="bar-fill yellow" style="width:18%"></div></div>
+        <div class="bar-value">$112.24</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">claude-haiku</div>
+        <div class="bar-track"><div class="bar-fill purple" style="width:8%"></div></div>
+        <div class="bar-value">$12.50</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Budget cards -->
+<div class="budget-section">
+  <div class="budget-card">
+    <div class="budget-header">
+      <h3>Monthly Budget</h3>
+      <span class="budget-status warn">83% used</span>
+    </div>
+    <div class="budget-bar"><div class="budget-bar-fill orange" style="width:83%"></div></div>
+    <div class="budget-details">
+      <span class="budget-spent">$1,247.32 spent</span>
+      <span class="budget-limit">$1,500.00 limit</span>
+    </div>
+  </div>
+  <div class="budget-card">
+    <div class="budget-header">
+      <h3>Per-Agent Cap: Code Reviewer</h3>
+      <span class="budget-status ok">62% used</span>
+    </div>
+    <div class="budget-bar"><div class="budget-bar-fill orange" style="width:62%"></div></div>
+    <div class="budget-details">
+      <span class="budget-spent">$436.56 spent</span>
+      <span class="budget-limit">$700.00 cap</span>
+    </div>
+  </div>
+</div>
+
+<!-- Threshold alerts -->
+<div class="threshold-card">
+  <h2>Alert Thresholds</h2>
+  <div class="threshold-row">
+    <div class="icon">⚠️</div>
+    <div class="info"><div class="name">Daily spend warning</div><div class="desc">Notify when daily spend exceeds threshold</div></div>
+    <button class="edit-btn">Edit</button>
+    <div class="threshold-value">$75.00</div>
+    <div class="threshold-toggle"></div>
+  </div>
+  <div class="threshold-row">
+    <div class="icon">🔴</div>
+    <div class="info"><div class="name">Monthly budget alert</div><div class="desc">Notify at 80% and 95% of monthly budget</div></div>
+    <button class="edit-btn">Edit</button>
+    <div class="threshold-value">80% / 95%</div>
+    <div class="threshold-toggle"></div>
+  </div>
+  <div class="threshold-row">
+    <div class="icon">💸</div>
+    <div class="info"><div class="name">Per-call cost cap</div><div class="desc">Alert if any single call exceeds cap</div></div>
+    <button class="edit-btn">Edit</button>
+    <div class="threshold-value">$2.50</div>
+    <div class="threshold-toggle off"></div>
+  </div>
+  <div class="threshold-row">
+    <div class="icon">📊</div>
+    <div class="info"><div class="name">Cost anomaly detection</div><div class="desc">Alert on unusual spending patterns</div></div>
+    <button class="edit-btn">Edit</button>
+    <div class="threshold-value">Auto</div>
+    <div class="threshold-toggle"></div>
+  </div>
+</div>
+
+<!-- Daily breakdown table -->
+<div class="table-card" style="margin-top:24px">
+  <h2>Daily Cost Breakdown (Last 7 Days)</h2>
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Agent</th><th>Model</th><th>Calls</th><th>Tokens</th><th>Cost</th><th>Change</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>May 31</td><td class="agent-name">Code Reviewer</td><td>claude-sonnet-4</td><td>1,240</td><td>2.8M</td><td>$62.40</td><td class="cost-up">↑ 8.2%</td></tr>
+      <tr><td>May 31</td><td class="agent-name">Data Analyzer</td><td>gpt-4o</td><td>890</td><td>1.9M</td><td>$44.55</td><td class="cost-up">↑ 3.1%</td></tr>
+      <tr><td>May 31</td><td class="agent-name">Content Writer</td><td>claude-opus</td><td>620</td><td>1.4M</td><td>$35.64</td><td class="cost-down">↓ 5.4%</td></tr>
+      <tr><td>May 30</td><td class="agent-name">Code Reviewer</td><td>claude-sonnet-4</td><td>1,180</td><td>2.6M</td><td>$57.65</td><td class="cost-up">↑ 12.1%</td></tr>
+      <tr><td>May 30</td><td class="agent-name">Data Analyzer</td><td>gpt-4o</td><td>860</td><td>1.8M</td><td>$43.20</td><td class="cost-up">↑ 2.5%</td></tr>
+      <tr><td>May 30</td><td class="agent-name">Test Runner</td><td>deepseek-v4</td><td>2,100</td><td>980K</td><td>$16.04</td><td class="cost-down">↓ 8.3%</td></tr>
+      <tr><td>May 29</td><td class="agent-name">Code Reviewer</td><td>claude-sonnet-4</td><td>1,120</td><td>2.4M</td><td>$51.45</td><td class="cost-up">↑ 6.7%</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

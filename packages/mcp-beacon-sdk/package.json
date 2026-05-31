@@ -1,0 +1,41 @@
+{
+  "name": "mcp-beacon",
+  "version": "0.1.0",
+  "description": "AI Agent Observability SDK — monitor OpenAI, Anthropic, and DeepSeek agents with a single line of code",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai-monitoring",
+    "llm-observability",
+    "openai-monitoring",
+    "anthropic-monitoring",
+    "deepseek-monitoring",
+    "agent-tracking",
+    "cost-tracking",
+    "loop-detection",
+    "mcp",
+    "beacon"
+  ],
+  "author": "MCP Beacon",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcp-beacon/sdk"
+  },
+  "peerDependencies": {
+    "openai": ">=4.0.0",
+    "@anthropic-ai/sdk": ">=0.30.0"
+  },
+  "peerDependenciesMeta": {
+    "openai": { "optional": true },
+    "@anthropic-ai/sdk": { "optional": true }
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

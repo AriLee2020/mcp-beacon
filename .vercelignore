@@ -1,0 +1,20 @@
+# Design assets (not needed for deployment)
+/design/
+
+# Documentation & planning files (not needed for deployment)
+PM_产品文档合集.md
+Market_竞品与市场调研.md
+MCP_BEACON_商业提案.md
+MCP_Beacon_免费到收费策略.md
+MCP_Beacon_执行计划.md
+MCP_Beacon_角色任务清单.md
+痛点与需求分析.md
+Designer_设计交付.md
+
+# Dev files
+README.md
+.env
+.env.*
+node_modules/
+.git/
+.gitignore

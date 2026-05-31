@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Beacon — Dashboard Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg: #0F1629;
+  --surface: #16213E;
+  --surface-hover: #1C2A4A;
+  --orange: #F97316;
+  --orange-dark: #EA580C;
+  --orange-light: #FDBA74;
+  --orange-ghost: rgba(249,115,22,0.1);
+  --text: #F5F5F5;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  --border: #2D3748;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+/* Sidebar */
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:32px;position:fixed;top:0;left:0;bottom:0;z-index:10}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 8px}
+.sidebar-logo svg{width:28px;height:28px;flex-shrink:0}
+.sidebar-logo span{font-family:var(--font-heading);font-weight:700;font-size:18px;letter-spacing:-0.01em}
+.sidebar-nav{list-style:none;display:flex;flex-direction:column;gap:4px}
+.sidebar-nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-sm);color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:500;transition:all 0.15s}
+.sidebar-nav a:hover,.sidebar-nav a.active{background:var(--orange-ghost);color:var(--orange)}
+.sidebar-nav a svg{width:18px;height:18px;flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding:16px 8px 0;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-avatar{width:32px;height:32px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#FFF}
+.sidebar-user{font-size:13px;font-weight:500}
+.sidebar-org{font-size:11px;color:var(--text-muted)}
+/* Main */
+main{margin-left:240px;flex:1;padding:32px}
+/* Top bar */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px}
+.topbar h1{font-family:var(--font-heading);font-size:24px;font-weight:700}
+.topbar-actions{display:flex;gap:12px;align-items:center}
+.time-range{display:flex;background:var(--surface);border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
+.time-range button{background:none;border:none;color:var(--text-secondary);padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);transition:all 0.15s}
+.time-range button.active,.time-range button:hover{background:var(--orange);color:#FFF}
+
+/* Metric cards */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color 0.2s}
+.metric-card:hover{border-color:var(--orange)}
+.metric-label{font-size:12px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+.metric-value{font-family:var(--font-heading);font-size:28px;font-weight:700;line-height:1.1}
+.metric-change{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:500;margin-top:4px}
+.metric-change.up{color:var(--success)}
+.metric-change.down{color:var(--error)}
+.metric-change.warn{color:var(--warning)}
+
+/* Chart + Agent list row */
+.content-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:32px}
+/* Chart */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.chart-header h3{font-family:var(--font-heading);font-size:16px;font-weight:600}
+.chart-legend{display:flex;gap:16px;font-size:12px;color:var(--text-muted)}
+.chart-legend span{display:flex;align-items:center;gap:6px}
+.chart-legend span::before{content:'';width:8px;height:8px;border-radius:2px}
+.chart-legend .calls::before{background:var(--orange)}
+.chart-legend .errors::before{background:var(--error)}
+.chart-canvas{height:200px;position:relative;display:flex;align-items:flex-end;gap:8px;padding-top:20px}
+.bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.bar{width:100%;max-width:36px;border-radius:4px 4px 0 0;transition:all 0.2s;cursor:pointer}
+.bar:hover{opacity:0.85;transform:scaleY(1.02);transform-origin:bottom}
+.bar.calls-bar{background:var(--orange);height:100%}
+.bar.errors-bar{background:var(--error);height:60%;position:absolute;bottom:0;right:4px;width:50%}
+.bar-group .day-label{font-size:10px;color:var(--text-muted);font-family:var(--font-mono);margin-top:4px}
+.chart-x{display:flex;justify-content:space-between;padding:0 4px;margin-top:8px}
+.chart-summary{display:flex;gap:24px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.chart-stat{text-align:center}
+.chart-stat-value{font-family:var(--font-heading);font-size:20px;font-weight:700}
+.chart-stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px}
+
+/* Agent list */
+.agent-list-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.agent-list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.agent-list-header h3{font-family:var(--font-heading);font-size:16px;font-weight:600}
+.agent-list-header .count{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);background:var(--bg);padding:4px 10px;border-radius:var(--radius-sm)}
+.agent-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--radius-sm);transition:background 0.15s;cursor:pointer}
+.agent-item:hover{background:var(--surface-hover)}
+.agent-item + .agent-item{border-top:1px solid var(--border)}
+.agent-status{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.agent-status.online{background:var(--success);box-shadow:0 0 8px rgba(16,185,129,0.4)}
+.agent-status.offline{background:var(--text-muted)}
+.agent-info{flex:1;min-width:0}
+.agent-name{font-size:14px;font-weight:600}
+.agent-model{font-size:11px;color:var(--text-muted);font-family:var(--font-mono);margin-top:2px}
+.agent-calls{text-align:right}
+.agent-calls-value{font-family:var(--font-mono);font-size:14px;font-weight:500}
+.agent-calls-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em}
+
+/* Bottom row */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.bottom-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.bottom-card h3{font-family:var(--font-heading);font-size:16px;font-weight:600;margin-bottom:16px}
+/* Tool usage list */
+.tool-item{display:flex;align-items:center;gap:12px;padding:10px 0}
+.tool-item + .tool-item{border-top:1px solid var(--border)}
+.tool-icon{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--orange-ghost);display:flex;align-items:center;justify-content:center;font-size:14px}
+.tool-info{flex:1}
+.tool-name{font-size:13px;font-weight:600;font-family:var(--font-mono)}
+.tool-count{font-size:11px;color:var(--text-muted)}
+.tool-bar{width:80px;height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
+.tool-bar-fill{height:100%;background:var(--orange);border-radius:2px}
+/* Alerts */
+.alert-item{display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:8px}
+.alert-icon{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.alert-icon.warning-icon{background:var(--warning)}
+.alert-icon.error-icon{background:var(--error)}
+.alert-text{font-size:13px;line-height:1.5}
+.alert-time{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+@media(max-width:1024px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .content-row{grid-template-columns:1fr}
+  .bottom-row{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .sidebar{display:none}
+  main{margin-left:0}
+  .metrics{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <svg viewBox="0 0 28 28"><polygon points="14,2 25,8 25,20 14,26 3,20 3,8" fill="none" stroke="#F97316" stroke-width="1.5"/><circle cx="14" cy="14" r="4" fill="#F97316"/></svg>
+    <span>Beacon</span>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="#" class="active"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="7" height="7" rx="1"/><rect x="10" y="1" width="7" height="7" rx="1"/><rect x="1" y="10" width="7" height="7" rx="1"/><rect x="10" y="10" width="7" height="7" rx="1"/></svg>Overview</a></li>
+    <li><a href="#"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="5" r="4"/><path d="M1 17c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>Agents</a></li>
+    <li><a href="#"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="16" height="12" rx="2"/><line x1="5" y1="7" x2="13" y2="7"/><line x1="5" y1="11" x2="11" y2="11"/></svg>Costs</a></li>
+    <li><a href="#"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 1v16M1 9h16"/><circle cx="9" cy="9" r="3"/></svg>Alerts</a></li>
+    <li><a href="#"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="8"/><path d="M9 5v4l3 2"/></svg>Settings</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <div class="sidebar-avatar">A</div>
+    <div>
+      <div class="sidebar-user">Acme Corp</div>
+      <div class="sidebar-org">Pro Plan</div>
+    </div>
+  </div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <h1>Dashboard Overview</h1>
+    <div class="topbar-actions">
+      <div class="time-range">
+        <button>24h</button>
+        <button class="active">7d</button>
+        <button>30d</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metric cards -->
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-label">Active Agents</div>
+      <div class="metric-value">12</div>
+      <div class="metric-change up">↑ 2 this week</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Total Calls</div>
+      <div class="metric-value">48.2k</div>
+      <div class="metric-change up">↑ 18.2%</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Cost (7d)</div>
+      <div class="metric-value">$142.80</div>
+      <div class="metric-change down">↑ 5.1% vs last week</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Error Rate</div>
+      <div class="metric-value">0.8%</div>
+      <div class="metric-change warn">Threshold: 2.0%</div>
+    </div>
+  </div>
+
+  <!-- Chart + Agent list -->
+  <div class="content-row">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>7-Day Call Volume</h3>
+        <div class="chart-legend">
+          <span class="calls">API Calls</span>
+          <span class="errors">Errors</span>
+        </div>
+      </div>
+      <div class="chart-canvas">
+        <div class="bar-group" style="height:100%"><div class="bar calls-bar" style="height:65%"></div><span class="day-label">Mon</span></div>
+        <div class="bar-group" style="height:100%"><div class="bar calls-bar" style="height:80%"></div><span class="day-label">Tue</span></div>
+        <div class="bar-group" style="height:100%"><div class="bar calls-bar" style="height:72%"></div><span class="day-label">Wed</span></div>
+        <div class="bar-group" style="height:100%"><div class="bar calls-bar" style="height:90%"></div><span class="day-label">Thu</span></div>
+        <div class="bar-group" style="height:100%"><div class="bar calls-bar" style="height:85%"></div><span class="day-label">Fri</span></div>
+        <div class="bar-group" style="height:100%"><div class="bar calls-bar" style="height:45%"></div><span class="day-label">Sat</span></div>
+        <div class="bar-group" style="height:100%"><div class="bar calls-bar" style="height:30%"></div><span class="day-label">Sun</span></div>
+      </div>
+      <div class="chart-summary">
+        <div class="chart-stat"><div class="chart-stat-value" style="color:var(--orange)">6,890</div><div class="chart-stat-label">Avg Daily</div></div>
+        <div class="chart-stat"><div class="chart-stat-value">48.2k</div><div class="chart-stat-label">Total</div></div>
+        <div class="chart-stat"><div class="chart-stat-value" style="color:var(--success)">99.2%</div><div class="chart-stat-label">Success Rate</div></div>
+        <div class="chart-stat"><div class="chart-stat-value" style="color:var(--warning)">420ms</div><div class="chart-stat-label">Avg Latency</div></div>
+      </div>
+    </div>
+
+    <div class="agent-list-card">
+      <div class="agent-list-header">
+        <h3>Agents</h3>
+        <span class="count">12 total</span>
+      </div>
+      <div class="agent-item">
+        <div class="agent-status online"></div>
+        <div class="agent-info"><div class="agent-name">Code Reviewer</div><div class="agent-model">claude-sonnet-4</div></div>
+        <div class="agent-calls"><div class="agent-calls-value">12.4k</div><div class="agent-calls-label">calls</div></div>
+      </div>
+      <div class="agent-item">
+        <div class="agent-status online"></div>
+        <div class="agent-info"><div class="agent-name">Data Analyzer</div><div class="agent-model">gpt-4o</div></div>
+        <div class="agent-calls"><div class="agent-calls-value">8.9k</div><div class="agent-calls-label">calls</div></div>
+      </div>
+      <div class="agent-item">
+        <div class="agent-status online"></div>
+        <div class="agent-info"><div class="agent-name">Content Writer</div><div class="agent-model">claude-opus</div></div>
+        <div class="agent-calls"><div class="agent-calls-value">7.2k</div><div class="agent-calls-label">calls</div></div>
+      </div>
+      <div class="agent-item">
+        <div class="agent-status online"></div>
+        <div class="agent-info"><div class="agent-name">Test Runner</div><div class="agent-model">deepseek-v4</div></div>
+        <div class="agent-calls"><div class="agent-calls-value">6.1k</div><div class="agent-calls-label">calls</div></div>
+      </div>
+      <div class="agent-item">
+        <div class="agent-status offline"></div>
+        <div class="agent-info"><div class="agent-name">Deploy Bot</div><div class="agent-model">claude-haiku</div></div>
+        <div class="agent-calls"><div class="agent-calls-value">3.8k</div><div class="agent-calls-label">calls</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom row -->
+  <div class="bottom-row">
+    <div class="bottom-card">
+      <h3>Top Tools Used</h3>
+      <div class="tool-item">
+        <div class="tool-icon">📁</div>
+        <div class="tool-info"><div class="tool-name">read_file</div><div class="tool-count">14,230 calls</div></div>
+        <div class="tool-bar"><div class="tool-bar-fill" style="width:85%"></div></div>
+      </div>
+      <div class="tool-item">
+        <div class="tool-icon">✏️</div>
+        <div class="tool-info"><div class="tool-name">write_file</div><div class="tool-count">9,870 calls</div></div>
+        <div class="tool-bar"><div class="tool-bar-fill" style="width:60%"></div></div>
+      </div>
+      <div class="tool-item">
+        <div class="tool-icon">🔍</div>
+        <div class="tool-info"><div class="tool-name">search_files</div><div class="tool-count">8,450 calls</div></div>
+        <div class="tool-bar"><div class="tool-bar-fill" style="width:50%"></div></div>
+      </div>
+      <div class="tool-item">
+        <div class="tool-icon">💻</div>
+        <div class="tool-info"><div class="tool-name">terminal</div><div class="tool-count">6,120 calls</div></div>
+        <div class="tool-bar"><div class="tool-bar-fill" style="width:38%"></div></div>
+      </div>
+      <div class="tool-item">
+        <div class="tool-icon">🌐</div>
+        <div class="tool-info"><div class="tool-name">web_search</div><div class="tool-count">4,300 calls</div></div>
+        <div class="tool-bar"><div class="tool-bar-fill" style="width:26%"></div></div>
+      </div>
+    </div>
+
+    <div class="bottom-card">
+      <h3>Recent Alerts</h3>
+      <div class="alert-item">
+        <div class="alert-icon warning-icon"></div>
+        <div><div class="alert-text"><strong>Code Reviewer</strong> latency spike: 2.3s (threshold: 1.5s)</div><div class="alert-time">2 hours ago</div></div>
+      </div>
+      <div class="alert-item">
+        <div class="alert-icon error-icon"></div>
+        <div><div class="alert-text"><strong>Deploy Bot</strong> failed 3 consecutive calls</div><div class="alert-time">5 hours ago</div></div>
+      </div>
+      <div class="alert-item">
+        <div class="alert-icon warning-icon"></div>
+        <div><div class="alert-text"><strong>Budget:</strong> Pro plan at 78% of monthly limit</div><div class="alert-time">1 day ago</div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>
