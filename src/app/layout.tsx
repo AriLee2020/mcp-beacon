@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { AuthHashHandler } from '@/components/auth/hash-handler';
 
 const SITE_NAME = 'MCP Beacon';
 const SITE_DESCRIPTION = 'AI Agent Monitoring, Illuminated — Real-time observability, cost tracking, and smart alerts for your AI agent infrastructure.';
@@ -132,7 +133,10 @@ export default function RootLayout({
         {/* DNS prefetch for analytics (placeholder) */}
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
       </head>
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        <AuthHashHandler />
+        {children}
+      </body>
     </html>
   );
 }
