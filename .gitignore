@@ -34,3 +34,16 @@ out/
 # Logs
 *.log
 npm-debug.log*
+
+# Internal project docs (commercial proposals, strategy, market research)
+*商业提案*
+*竞品*
+*产品文档*
+*执行计划*
+*任务清单*
+*策略*
+DEPLOYMENT.md
+痛点*
+design/DESIGN.md
+design/LOGO-REVIEW.md
+Designer_*
