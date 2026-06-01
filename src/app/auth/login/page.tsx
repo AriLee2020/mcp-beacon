@@ -20,18 +20,23 @@ function LoginForm() {
     setError(null);
     setMessage(null);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${redirect}` },
-    });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${redirect}` },
+      });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage("Check your email for the magic link!");
+      if (error) {
+        setError(error.message);
+      } else {
+        setMessage("Check your email for the magic link!");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleGitHub = async () => {
