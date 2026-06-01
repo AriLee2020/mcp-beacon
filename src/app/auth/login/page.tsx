@@ -88,12 +88,12 @@ function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F97316] text-sm"
         />
         <button
           type="submit"
           disabled={loading || !email}
-          className="mt-4 w-full py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className="mt-4 w-full py-3 rounded-xl bg-[#F97316] text-white font-semibold hover:bg-[#EA580C] transition-colors disabled:opacity-50"
         >
           {loading ? "Sending..." : "Send Magic Link"}
         </button>

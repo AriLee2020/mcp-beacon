@@ -1,0 +1,30 @@
+{
+  "name": "MCP Beacon",
+  "short_name": "MCP Beacon",
+  "description": "AI Agent Monitoring, Illuminated — Real-time observability, cost tracking, and smart alerts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1629",
+  "theme_color": "#F97316",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1A1A2E"/>
+      <stop offset="100%" stop-color="#16213E"/>
+    </linearGradient>
+  </defs>
+  <!-- Hexagon -->
+  <polygon points="100,20 160,55 160,125 100,160 40,125 40,55" 
+           fill="url(#bgGrad)" stroke="#F97316" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Beacon dot center -->
+  <circle cx="100" cy="95" r="12" fill="#F97316"/>
+  <!-- Radiating lines -->
+  <line x1="100" y1="95" x2="100" y2="40" stroke="#F97316" stroke-width="2" opacity="0.6"/>
+  <line x1="100" y1="95" x2="140" y2="72" stroke="#F97316" stroke-width="2" opacity="0.5"/>
+  <line x1="100" y1="95" x2="140" y2="110" stroke="#F97316" stroke-width="2" opacity="0.4"/>
+  <line x1="100" y1="95" x2="100" y2="140" stroke="#F97316" stroke-width="2" opacity="0.3"/>
+  <line x1="100" y1="95" x2="60" y2="110" stroke="#F97316" stroke-width="2" opacity="0.4"/>
+  <line x1="100" y1="95" x2="60" y2="72" stroke="#F97316" stroke-width="2" opacity="0.5"/>
+  <!-- Glow -->
+  <circle cx="100" cy="95" r="20" fill="#F97316" opacity="0.2"/>
+</svg>

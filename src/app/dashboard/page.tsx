@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/header-footer";
+import { SignOutButton } from "@/components/auth/signout-button";
 import Link from "next/link";
 import { BarChart3, Code, Bell, Settings } from "lucide-react";
 
@@ -11,7 +12,7 @@ export default async function DashboardPage() {
   if (!user) redirect("/auth/login");
 
   const { data: profile } = await supabase
-    .from("users")
+    .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
@@ -21,10 +22,10 @@ export default async function DashboardPage() {
     .select("*")
     .eq("user_id", user.id);
 
-  const { data: alerts } = await supabase
-    .from("alerts")
-    .select("*")
-    .eq("resolved", false)
+  const { data: alertLogs } = await supabase
+    .from("alert_logs")
+    .select("*, alerts!inner(name, alert_type)")
+    .eq("acknowledged", false)
     .limit(5);
 
   return (
@@ -34,10 +35,10 @@ export default async function DashboardPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold">
-              Welcome{profile?.display_name ? `, ${profile.display_name}` : ""}
+              Welcome{profile?.full_name ? `, ${profile.full_name}` : ""}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Plan: {profile?.plan || "free"} · {projects?.length || 0} projects
+              {projects?.length || 0} projects
             </p>
           </div>
           <Link
@@ -47,13 +48,14 @@ export default async function DashboardPage() {
             <Settings className="w-4 h-4" />
             Settings
           </Link>
+          <SignOutButton />
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
             { icon: <BarChart3 className="w-5 h-5" />, label: "Total Requests", value: "—" },
-            { icon: <Bell className="w-5 h-5" />, label: "Alerts", value: String(alerts?.length || 0) },
+            { icon: <Bell className="w-5 h-5" />, label: "Alerts", value: String(alertLogs?.length || 0) },
             { icon: <Code className="w-5 h-5" />, label: "Projects", value: String(projects?.length || 0) },
             { icon: <BarChart3 className="w-5 h-5" />, label: "Monthly Cost", value: "$0.00" },
           ].map((stat) => (
@@ -85,9 +87,9 @@ export default async function DashboardPage() {
                   </p>
                   <div className="mt-4 flex items-center justify-between text-xs">
                     <code className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 font-mono">
-                      API Key: {project.api_key.slice(0, 8)}...
+                      ID: {project.id.slice(0, 8)}...
                     </code>
-                    <span className="text-gray-400">{project.daily_request_limit.toLocaleString()} req/day</span>
+                    <span className="text-gray-400">{project.total_calls?.toLocaleString() || 0} calls</span>
                   </div>
                 </div>
               ))}
@@ -101,28 +103,28 @@ export default async function DashboardPage() {
         </div>
 
         {/* Recent Alerts */}
-        {alerts && alerts.length > 0 && (
+        {alertLogs && alertLogs.length > 0 && (
           <div>
             <h2 className="text-lg font-semibold mb-4">Recent Alerts</h2>
             <div className="space-y-2">
-              {alerts.map((alert) => (
+              {alertLogs.map((log) => (
                 <div
-                  key={alert.id}
+                  key={log.id}
                   className={`p-4 rounded-xl border ${
-                    alert.severity === "critical"
+                    log.alerts?.alert_type === "cost_spike" || log.alerts?.alert_type === "error_rate"
                       ? "border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950"
-                      : alert.severity === "warning"
+                      : log.alerts?.alert_type === "latency"
                         ? "border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-950"
                         : "border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xs font-semibold uppercase">{alert.type}</span>
-                      <p className="text-sm mt-1">{alert.message}</p>
+                      <span className="text-xs font-semibold uppercase">{log.alerts?.alert_type || "alert"}</span>
+                      <p className="text-sm mt-1">{log.alerts?.name || "Alert"} — value: {log.value}</p>
                     </div>
                     <span className="text-xs text-gray-500">
-                      {new Date(alert.created_at).toLocaleString()}
+                      {new Date(log.triggered_at).toLocaleString()}
                     </span>
                   </div>
                 </div>
