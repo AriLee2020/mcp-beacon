@@ -24,7 +24,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (isAuthRoute && user) {
+  // Redirect logged-in users from root/login to dashboard
+  if (user && (pathname === "/" || isAuthRoute)) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
