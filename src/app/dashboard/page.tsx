@@ -8,7 +8,22 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/auth/login");
 
-  const [{ data: profile }, { data: projects }, { data: alertLogs }] = await Promise.all([
+  // Ensure profile exists
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) {
+    await supabase.from("profiles").insert({
+      id: user.id,
+      email: user.email,
+      full_name: user.email?.split("@")[0] || "User",
+    });
+  }
+
+  const [{ data: freshProfile }, { data: projects }, { data: alertLogs }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("projects").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
     supabase
@@ -21,7 +36,7 @@ export default async function DashboardPage() {
   return (
     <DashboardClient
       user={user}
-      profile={profile}
+      profile={freshProfile}
       projects={projects || []}
       alertLogs={alertLogs || []}
     />
