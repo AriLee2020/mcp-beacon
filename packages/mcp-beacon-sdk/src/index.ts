@@ -26,7 +26,7 @@ export type { BeaconConfig, BeaconEvent, LLMEvent, HTTPEvent, LoopAlert };
  * import { createBeacon } from 'mcp-beacon';
  *
  * const beacon = createBeacon({
- *   endpoint: 'https://api.mcpbeacon.dev',
+ *   endpoint: 'https://api.mcpbeacon.asia',
  *   apiKey: 'mb_live_xxx',
  *   agentId: 'my-agent-1',
  * });

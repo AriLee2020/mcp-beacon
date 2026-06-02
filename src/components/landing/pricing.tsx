@@ -97,7 +97,7 @@ export function Pricing() {
               ))}
             </ul>
             <Link
-              href={tier.name === "Enterprise" ? "mailto:sales@mcpbeacon.dev" : "/auth/login"}
+              href={tier.name === "Enterprise" ? "mailto:sales@mcpbeacon.asia" : "/auth/login"}
               className={cn(
                 "mt-8 block w-full text-center py-3 rounded-xl font-semibold transition-colors",
                 tier.highlighted

@@ -4,7 +4,7 @@ import { AuthHashHandler } from '@/components/auth/hash-handler';
 
 const SITE_NAME = 'MCP Beacon';
 const SITE_DESCRIPTION = 'AI Agent Monitoring, Illuminated — Real-time observability, cost tracking, and smart alerts for your AI agent infrastructure.';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mcpbeacon.dev';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mcpbeacon.asia';
 
 export const viewport: Viewport = {
   themeColor: '#F97316',
