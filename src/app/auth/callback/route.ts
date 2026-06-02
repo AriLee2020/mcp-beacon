@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabase } from "@/lib/supabase-server";
+import { createServerClient } from "@supabase/ssr";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -8,7 +8,25 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type");
   const redirect = searchParams.get("redirect") || "/dashboard";
 
-  const supabase = await createServerSupabase();
+  // Create response first so cookies can be set on it
+  let response = NextResponse.redirect(`${origin}${redirect}`);
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
 
   // OAuth callback (GitHub, etc.)
   if (code) {
@@ -18,10 +36,10 @@ export async function GET(request: NextRequest) {
         `${origin}/auth/login?error=${encodeURIComponent(error.message)}`
       );
     }
-    return NextResponse.redirect(`${origin}${redirect}`);
+    return response;
   }
 
-  // Magic link callback
+  // Magic link callback (token_hash)
   if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
@@ -32,9 +50,9 @@ export async function GET(request: NextRequest) {
         `${origin}/auth/login?error=${encodeURIComponent(error.message)}`
       );
     }
-    return NextResponse.redirect(`${origin}${redirect}`);
+    return response;
   }
 
-  // Unknown callback — redirect to login
+  // Fallback — unknown callback
   return NextResponse.redirect(`${origin}/auth/login`);
 }
