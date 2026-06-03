@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-page-bg flex flex-col items-center justify-center p-8">
@@ -14,10 +12,10 @@ export default function HomePage() {
           AI Agent Monitoring, Illuminated — Real-time observability, cost tracking, and smart alerts.
         </p>
         <div className="flex gap-4 justify-center">
-          <Link href="/auth/login" className="btn-primary">
+          <a href="/auth/login" className="btn-primary">
             Get Started Free
-          </Link>
-          <a href="#features" className="btn-secondary">
+          </a>
+          <a href="/auth/login" className="btn-secondary">
             View Demo
           </a>
         </div>
