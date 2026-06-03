@@ -3,10 +3,10 @@ import { createServerClient } from "@supabase/ssr";
 import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
-  // Create Supabase client with proper cookie handling
+  // Create Supabase client with service_role to bypass RLS
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       cookies: {
         getAll() {
