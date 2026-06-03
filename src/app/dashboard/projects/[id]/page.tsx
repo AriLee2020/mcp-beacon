@@ -1,6 +1,6 @@
 import { createServerSupabase } from "@/lib/supabase-server";
 import { redirect, notFound } from "next/navigation";
-import { ProjectPageClient } from "@/components/dashboard/project-detail-client";
+import ProjectPageClient from "@/components/dashboard/project-detail-client";
 
 export default async function ProjectPage({
   params,
