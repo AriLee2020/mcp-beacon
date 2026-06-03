@@ -26,7 +26,7 @@ import { createBeacon, wrap } from "mcp-beacon";
 
 // 1. Create a Beacon instance
 const beacon = createBeacon({
-  endpoint: "https://api.mcpbeacon.asia",
+  endpoint: "https://mcpbeacon.asia",
   apiKey: "mb_live_xxx",
   agentId: "my-agent-1",
 });
