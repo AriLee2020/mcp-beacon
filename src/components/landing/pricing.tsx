@@ -1,6 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ContactModal } from "./contact-modal";
 
 const tiers = [
   {
@@ -57,8 +61,12 @@ const tiers = [
 ];
 
 export function Pricing() {
+  const [contactOpen, setContactOpen] = useState(false);
+
   return (
-    <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <>
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
+      <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="text-center mb-16">
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
           Simple, Transparent Pricing
@@ -96,20 +104,33 @@ export function Pricing() {
                 </li>
               ))}
             </ul>
-            <Link
-              href={tier.name === "Enterprise" ? "mailto:sales@mcpbeacon.asia" : "/auth/login"}
-              className={cn(
-                "mt-8 block w-full text-center py-3 rounded-xl font-semibold transition-colors",
-                tier.highlighted
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800",
-              )}
-            >
-              {tier.cta}
-            </Link>
+            {tier.name === "Enterprise" ? (
+              <button
+                onClick={() => setContactOpen(true)}
+                className={cn(
+                  "mt-8 block w-full text-center py-3 rounded-xl font-semibold transition-colors",
+                  "border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800",
+                )}
+              >
+                {tier.cta}
+              </button>
+            ) : (
+              <Link
+                href="/auth/login"
+                className={cn(
+                  "mt-8 block w-full text-center py-3 rounded-xl font-semibold transition-colors",
+                  tier.highlighted
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800",
+                )}
+              >
+                {tier.cta}
+              </Link>
+            )}
           </div>
         ))}
       </div>
     </section>
+    </>
   );
 }
